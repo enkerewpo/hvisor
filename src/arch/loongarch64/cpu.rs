@@ -78,7 +78,7 @@ impl ArchCpu {
         // - wheatfox 2025.5.20
         self.ctx.gcsr_cpuid = 0;
         info!(
-            "[[CPU virtualization]] CPU{} run@{:#x}",
+            "loongarch64: CPU{} run@{:#x}",
             self.get_cpuid(),
             self.ctx.sepc
         );
