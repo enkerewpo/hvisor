@@ -101,7 +101,10 @@ pub fn install_trap_vector() {
     euen::set_sxe(true); // 128-bit SIMD
     euen::set_asxe(true); // 256-bit SIMD
 
-    enable_global_interrupt()
+    enable_global_interrupt();
+
+    // we also init uart here because we need it at very early stage
+    crate::device::uart::loongson_uart::init_uart();
 }
 
 /// enable CRMD.IE

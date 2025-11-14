@@ -52,8 +52,8 @@ pub fn primary_init_early() {
 pub fn primary_init_late() {
     info!("loongarch64: irqchip: primary_init_late: running primary_init_late");
 
-    info!("loongarch64: irqchip: primary_init_late: testing UART1");
-    crate::device::uart::loongson_uart::__test_uart1();
+    // info!("loongarch64: irqchip: primary_init_late: testing UART1");
+    // crate::device::uart::loongson_uart::__test_uart1();
 
     info!("loongarch64: irqchip: primary_init_late: probing pci");
     probe_pci();

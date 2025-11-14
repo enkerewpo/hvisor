@@ -23,13 +23,19 @@ use tock_registers::register_bitfields;
 use tock_registers::register_structs;
 use tock_registers::registers::{ReadOnly, ReadWrite, WriteOnly};
 
-const UART_CPU_REF_CLK: usize = 100000000; // 100MHz for 3A5000's SYS_CLK
-const UART_CPU_DIV_HI: usize = ((UART_CPU_REF_CLK + (115200 * 8)) / (115200 * 16)) >> 8;
-const UART_CPU_DIV_LO: usize = ((UART_CPU_REF_CLK + (115200 * 8)) / (115200 * 16)) & 0xff;
+const UART_CPU_REF_CLK: usize = 100000000; // 100MHz for 3A5000's SYS_CLK UART0
+const UART_CPU_BAUDRATE: usize = 115200;
+const UART_CPU_DIV_HI: usize =
+    ((UART_CPU_REF_CLK + (UART_CPU_BAUDRATE * 8)) / (UART_CPU_BAUDRATE * 16)) >> 8;
+const UART_CPU_DIV_LO: usize =
+    ((UART_CPU_REF_CLK + (UART_CPU_BAUDRATE * 8)) / (UART_CPU_BAUDRATE * 16)) & 0xff;
 
-const UART_COM_REF_CLK: usize = 50000000; // 50MHz for 7A2000 COM DB9 RS232 (115200 8n1)
-const UART_COM_DIV_HI: usize = ((UART_COM_REF_CLK + (115200 * 8)) / (115200 * 16)) >> 8;
-const UART_COM_DIV_LO: usize = ((UART_COM_REF_CLK + (115200 * 8)) / (115200 * 16)) & 0xff;
+const UART_COM_REF_CLK: usize = 50000000; // 50MHz for 7A2000 COM DB9 RS232 no.1
+const UART_COM_BAUDRATE: usize = 115200;
+const UART_COM_DIV_HI: usize =
+    ((UART_COM_REF_CLK + (UART_COM_BAUDRATE * 8)) / (UART_COM_BAUDRATE * 16)) >> 8;
+const UART_COM_DIV_LO: usize =
+    ((UART_COM_REF_CLK + (UART_COM_BAUDRATE * 8)) / (UART_COM_BAUDRATE * 16)) & 0xff;
 
 const BOARD_UART0_VADDR: usize = 0x8000_0000_1fe0_01e0;
 const BOARD_UART1_VADDR: usize = 0x8000_0000_1008_0000;
@@ -220,12 +226,19 @@ impl Uart {
 pub static UART0: Mutex<Uart> = Mutex::new(Uart::new(0));
 pub static UART1: Mutex<Uart> = Mutex::new(Uart::new(1));
 
+pub fn init_uart() {
+    UART0.lock().init();
+    UART1.lock().init();
+}
+
+/// you can set whether to use UART0 or UART1 by commenting out the line you don't want to use
 pub fn console_putchar(c: u8) {
     UART0.lock().putchar(c);
+    // UART1.lock().putchar(c);
 }
 
 pub fn console_getchar() -> Option<u8> {
-    UART0.lock().getchar().into()
+    panic!("loongson_uart: console_getchar: not implemented");
 }
 
 pub fn __test_uart1() {
