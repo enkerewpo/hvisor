@@ -27,7 +27,7 @@ pub struct BarRegion {
     pub bar_type: BarType,
 }
 
-#[derive(Default, Debug, Copy, Clone)]
+#[derive(Default, Debug, Copy, Clone, PartialEq)]
 pub enum BarType {
     Mem32,
     Mem64,
@@ -142,6 +142,6 @@ impl VirtPciBar {
     }
 
     pub fn write(&mut self, new_val: u32) {
-        self.val = new_val & self.mask;
+        self.val = (new_val & self.mask) | (self.val & !self.mask);
     }
 }
