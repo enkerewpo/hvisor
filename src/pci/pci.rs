@@ -370,6 +370,7 @@ impl Zone {
 
 pub fn mmio_pci_handler(mmio: &mut MMIOAccess, base: usize) -> HvResult {
     // info!("mmio pci: {:#x}", mmio.address);
+
     let zone = this_zone();
     let mut binding = zone.write();
     let zone_id = binding.id;
@@ -401,6 +402,8 @@ pub fn mmio_pci_handler(mmio: &mut MMIOAccess, base: usize) -> HvResult {
             //         }
             //     }
             // }
+            trace!("mmio pci: {} @{:#x} sz={:#x} base={:#x} v={:#x}", 
+                if mmio.is_write { "->write" } else { "<- read" }, mmio.address, mmio.size, base, mmio.value);
             return Ok(());
         }
         false => {
@@ -409,13 +412,19 @@ pub fn mmio_pci_handler(mmio: &mut MMIOAccess, base: usize) -> HvResult {
             if header_val == 0xffffffffu32 || header_val == 0 {
                 if reg_addr == 0 && mmio.is_write == false {
                     mmio.value = header_val as _;
+                    trace!("mmio pci: {} @{:#x} sz={:#x} base={:#x} v={:#x}", 
+                        if mmio.is_write { "->write" } else { "<- read" }, mmio.address, mmio.size, base, mmio.value);
                     return Ok(());
                 } else {
                     #[cfg(not(target_arch = "x86_64"))]
                     panic!("invalid access to empty device {:x}:{:x}.{:x}, addr: {:#x}, reg_addr: {:#x}!", bdf >> 8, (bdf >> 3) & 0b11111, bdf & 0b111, mmio.address, reg_addr);
                     // in x86, linux will probe for pci devices automatically
                     #[cfg(target_arch = "x86_64")]
-                    return Ok(());
+                    {
+                        trace!("mmio pci: {} @{:#x} sz={:#x} base={:#x} v={:#x}", 
+                            if mmio.is_write { "->write" } else { "<- read" }, mmio.address, mmio.size, base, mmio.value);
+                        return Ok(());
+                    }
                 }
             } else {
                 // device exists, so we try to get the phantom device
@@ -437,7 +446,10 @@ pub fn mmio_pci_handler(mmio: &mut MMIOAccess, base: usize) -> HvResult {
                             .unwrap()
                     }
                 };
-                pdev.phantom_mmio_handler(mmio, base, zone_id)
+                let result = pdev.phantom_mmio_handler(mmio, base, zone_id);
+                trace!("mmio pci: {} @{:#x} sz={:#x} base={:#x} v={:#x}", 
+                    if mmio.is_write { "->write" } else { "<- read" }, mmio.address, mmio.size, base, mmio.value);
+                return result;
             }
         }
     }
