@@ -17,14 +17,10 @@
 use crate::arch::cpu::this_cpu_id;
 use crate::consts::IPI_EVENT_CLEAR_INJECT_IRQ;
 use crate::device::common::MMIODerefWrapper;
-use core::arch::asm;
 use core::ptr::write_volatile;
-use loongArch64::cpu;
 use loongArch64::register::ecfg::LineBasedInterrupt;
 use loongArch64::register::*;
-use loongArch64::time;
-use tock_registers::fields::FieldValue;
-use tock_registers::interfaces::{ReadWriteable, Readable, Writeable};
+use tock_registers::interfaces::{Readable, Writeable};
 use tock_registers::register_bitfields;
 use tock_registers::register_structs;
 use tock_registers::registers::{ReadOnly, ReadWrite, WriteOnly};
@@ -98,32 +94,22 @@ fn iocsr_mbuf_send_box_hi(a: usize) -> usize {
     (a << 1) + 1
 }
 
-// allow unused for now
-#[allow(unused_assignments)]
 pub fn mail_send_percore(data: usize, cpu_id: usize, mailbox_id: usize) {
-    // the high and low 32 bits should be sent separately
-    // first high 32 bits, then low 32 bits
-    let mut high = data >> 32;
-    let mut low = data & 0xffffffff;
-    let mut val: usize = 0;
-    // send high 32 bits
-    val = 1 << 31;
+    let high = data >> 32;
+    let low = data & 0xffff_ffff;
+
+    let mut val: usize = 1 << 31;
     val |= iocsr_mbuf_send_box_hi(mailbox_id) << 2;
     val |= cpu_id << 16;
     val |= high << 32;
-    // debug!("(mail_send) sending high 32 bits, actual packed value: {:#x}", val);
     unsafe {
-        // asm!("iocsrwr.d {}, {}", in(reg) val, in(reg) 0x1048);
         write_volatile(IPI_MMIO_MAIL_SEND as *mut u64, val as u64);
     }
-    // send low 32 bits
     val = 1 << 31;
     val |= iocsr_mbuf_send_box_lo(mailbox_id) << 2;
     val |= cpu_id << 16;
     val |= low << 32;
-    // debug!("(mail_send) sending low 32 bits, actual packed value: {:#x}", val);
     unsafe {
-        // asm!("iocsrwr.d {}, {}", in(reg) val, in(reg) 0x1048);
         write_volatile(IPI_MMIO_MAIL_SEND as *mut u64, val as u64);
     }
 }
@@ -146,19 +132,14 @@ fn ffs(a: usize) -> usize {
 const IPI_MMIO_IPI_SEND: usize = MMIO_BASE + 0x1040; // 32 bits Write Only
 const IPI_MMIO_MAIL_SEND: usize = MMIO_BASE + 0x1048; // 64 bits Write Only
 
-#[allow(unused_assignments)]
 pub fn ipi_write_action_percore(cpu_id: usize, _action: usize) {
-    let mut irq: u32 = 0;
     let mut action = _action;
     debug!(
         "loongarch64::ipi_write_action sending action: {:#x} to cpu: {}",
         action, cpu_id
     );
-    loop {
-        irq = ffs(action) as u32;
-        if irq == 0 {
-            break;
-        }
+    while action != 0 {
+        let irq = ffs(action) as u32;
         let mut val: u32 = 1 << 31;
         val |= irq - 1;
         val |= (cpu_id as u32) << 16;

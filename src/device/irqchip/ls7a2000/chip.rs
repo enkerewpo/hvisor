@@ -18,6 +18,7 @@
 // wheatfox 2024.2.27
 
 use crate::device::common::MMIODerefWrapper;
+use crate::device::irqchip::ls7a2000::consts::*;
 use alloc::string::String;
 use core::ptr::*;
 use tock_registers::fields::FieldValue;
@@ -25,31 +26,6 @@ use tock_registers::interfaces::{ReadWriteable, Readable, Writeable};
 use tock_registers::register_bitfields;
 use tock_registers::register_structs;
 use tock_registers::registers::{ReadOnly, ReadWrite, WriteOnly};
-
-const PHY_ADDR_BITMASK: usize = 0x0000_ffff_ffff_ffff;
-const DMW0_PREFIX: usize = 0x8000_0000_0000_0000;
-const DMW1_PREFIX: usize = 0x9000_0000_0000_0000;
-
-#[macro_export]
-macro_rules! DMW_TO_PHY {
-    ($addr:expr) => {
-        $addr & 0x0000_ffff_ffff_ffffusize
-    };
-}
-
-#[macro_export]
-macro_rules! PHY_TO_DMW_CACHED {
-    ($addr:expr) => {
-        $addr | 0x9000_0000_0000_0000usize
-    };
-}
-
-#[macro_export]
-macro_rules! PHY_TO_DMW_UNCACHED {
-    ($addr:expr) => {
-        $addr | 0x8000_0000_0000_0000usize
-    };
-}
 
 register_bitfields! [
   u8,
@@ -450,27 +426,6 @@ register_structs! {
   }
 }
 
-const MMIO_BASE: usize = PHY_TO_DMW_UNCACHED!(0x1fe0_0000);
-const CHIP_CONFIG_BASE: usize = MMIO_BASE + 0x0;
-const CHIP_OTHER_FUNCTION_BASE: usize = MMIO_BASE + 0x420;
-const CHIP_LEGACY_INT_ROUTE_BASE: usize = MMIO_BASE + 0x1400;
-const CHIP_LEGACY_INT_CTRL_BASE: usize = MMIO_BASE + 0x1420;
-const CHIP_EXTIOI_DEBUG_SEND_BASE: usize = MMIO_BASE + 0x1140;
-const CHIP_EXTIOI_NODE_TYPE_BASE: usize = MMIO_BASE + 0x14a0;
-const CHIP_EXTIOI_ROUTE_BASE: usize = MMIO_BASE + 0x14c2;
-const CHIP_EXTIOI_ENABLE_BASE: usize = MMIO_BASE + 0x1600;
-const CHIP_EXTIOI_BOUNCE_BASE: usize = MMIO_BASE + 0x1680;
-const CHIP_EXTIOI_STATUS_BASE: usize = MMIO_BASE + 0x1700;
-const CHIP_EXTIOI_CORE0_STATUS_BASE: usize = MMIO_BASE + 0x1800;
-const CHIP_EXTIOI_CORE1_STATUS_BASE: usize = MMIO_BASE + 0x1900;
-const CHIP_EXTIOI_CORE2_STATUS_BASE: usize = MMIO_BASE + 0x1a00;
-const CHIP_EXTIOI_CORE3_STATUS_BASE: usize = MMIO_BASE + 0x1b00;
-const CHIP_EXTIOI_ROUTE_CORE_BASE: usize = MMIO_BASE + 0x1c00;
-
-const CHIP_HT_CONFIG_BASE: usize = PHY_TO_DMW_UNCACHED!(0xfd_fb00_0000); // 3A5000 manual p118
-const CHIP_HT_INT_VECTOR_BASE: usize = CHIP_HT_CONFIG_BASE + 0x80;
-const CHIP_HT_INT_EN_BASE: usize = CHIP_HT_CONFIG_BASE + 0xa0;
-
 pub static CHIP_CONFIG: MMIODerefWrapper<ChipConfigRegs> =
     unsafe { MMIODerefWrapper::new(CHIP_CONFIG_BASE as usize) };
 
@@ -852,10 +807,6 @@ pub fn clear_extioi_sr() {
 /*             PCI STUFFS :)                  */
 /******************************************** */
 
-const PCI_STANDARD_CONFIG_BASE_ALT: usize = 0x8000_0000_1a00_0000;
-const PCI_STANDARD_CONFIG_BASE: usize = 0x8000_0efd_fe00_0000;
-const PCI_RESERVED_CONFIG_BASE: usize = 0x8000_0efe_0000_0000;
-
 /**
     Standard PCI config space:
     TYPE0: [15:11] Device Number, [10:8] Function Number, [7:0] Offset
@@ -941,38 +892,6 @@ pub fn probe_pci_config_reserved(
 }
 
 // https://admin.pci-ids.ucw.cz/read/PC/0014
-
-const PCI_VENDOR_ID_LOONGSON: usize = 0x0014;
-
-const PCI_DEVICE_ID_HT_BRIDGE: usize = 0x7a00;
-const PCI_DEVICE_ID_APB: usize = 0x7a02;
-const PCI_DEVICE_ID_GIGE: usize = 0x7a03;
-const PCI_DEVICE_ID_OTG_USB: usize = 0x7a04;
-const PCI_DEVICE_ID_GPU: usize = 0x7a05;
-const PCI_DEVICE_ID_DC: usize = 0x7a06;
-const PCI_DEVICE_ID_HDA: usize = 0x7a07;
-const PCI_DEVICE_ID_SATA: usize = 0x7a08;
-const PCI_DEVICE_ID_PCI_BRIDGE: usize = 0x7a09;
-const PCI_DEVICE_ID_SPI: usize = 0x7a0b;
-const PCI_DEVICE_ID_LPC: usize = 0x7a0c;
-const PCI_DEVICE_ID_DMA: usize = 0x7a0f;
-const PCI_DEVICE_ID_HT_BRIDGE2: usize = 0x7a10;
-const PCI_DEVICE_ID_PCH_GIGE: usize = 0x7a13;
-const PCI_DEVICE_ID_EHCI_USB: usize = 0x7a14;
-const PCI_DEVICE_ID_GPU2: usize = 0x7a15;
-const PCI_DEVICE_ID_SATA3: usize = 0x7a18;
-const PCI_DEVICE_ID_PCI_BRIDGE2: usize = 0x7a19;
-const PCI_DEVICE_ID_SPI2: usize = 0x7a1b;
-const PCI_DEVICE_ID_OHCI_USB: usize = 0x7a24;
-const PCI_DEVICE_ID_LG100_GPU: usize = 0x7a25;
-const PCI_DEVICE_ID_I2S: usize = 0x7a27;
-const PCI_DEVICE_ID_PCI_BRIDGE3: usize = 0x7a29;
-const PCI_DEVICE_ID_XHCI_USB: usize = 0x7a34;
-const PCI_DEVICE_ID_DC2: usize = 0x7a36;
-const PCI_DEVICE_ID_PCIE_X1: usize = 0x7a39;
-const PCI_DEVICE_ID_PCIE_X4: usize = 0x7a49;
-const PCI_DEVICE_ID_PCIE_X8: usize = 0x7a59;
-const PCI_DEVICE_ID_PCIE_X16: usize = 0x7a69;
 
 pub fn parse_vendor_device_id(vendor_id: usize, device_id: usize) -> String {
     let mut name = String::new();

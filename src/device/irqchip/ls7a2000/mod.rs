@@ -16,6 +16,7 @@
 //
 #![allow(unused)]
 
+use crate::arch::consts::*;
 use crate::{
     arch::{
         clock::*,
@@ -31,6 +32,7 @@ use loongArch64::register::tcfg;
 use spin::Mutex;
 
 pub mod chip;
+pub mod consts;
 
 pub fn primary_init_early() {
     if this_cpu_id() != 0 {
@@ -95,20 +97,6 @@ pub fn percpu_init() {
     clock_cpucfg_dump();
     // timer_test_tick();
 }
-
-const INT_SWI0: usize = 0;
-const INT_SWI1: usize = 1;
-const INT_HWI0: usize = 2;
-const INT_HWI1: usize = 3;
-const INT_HWI2: usize = 4;
-const INT_HWI3: usize = 5;
-const INT_HWI4: usize = 6;
-const INT_HWI5: usize = 7;
-const INT_HWI6: usize = 8;
-const INT_HWI7: usize = 9;
-const INT_PERF: usize = 10;
-const INT_TIMER: usize = 11;
-const INT_IPI: usize = 12;
 
 /// inject irq to THIS cpu
 pub fn inject_irq(_irq: usize, is_hardware: bool) {

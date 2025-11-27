@@ -16,21 +16,15 @@
 //
 use super::ipi::*;
 use super::zone::ZoneContext;
-use crate::arch::zone::disable_hwi_through;
 use crate::device::common::MMIODerefWrapper;
 use crate::percpu::this_cpu_data;
 use crate::zone::find_zone;
 use core::arch::asm;
-use core::fmt::{self, Debug, Formatter};
-use loongArch64::register::crmd::Crmd;
-use loongArch64::register::pgdl;
-use loongArch64::register::{cpuid, crmd};
+use loongArch64::register::cpuid;
 use tock_registers::interfaces::Writeable;
 
-use crate::{
-    consts::{PER_CPU_ARRAY_PTR, PER_CPU_SIZE},
-    memory::VirtAddr,
-};
+use crate::consts::{PER_CPU_ARRAY_PTR, PER_CPU_SIZE};
+use crate::memory::VirtAddr;
 
 #[repr(C)]
 #[derive(Debug)]
@@ -44,14 +38,13 @@ pub struct ArchCpu {
 
 impl ArchCpu {
     pub fn new(cpuid: usize) -> Self {
-        let mut ret = ArchCpu {
+        Self {
             ctx: super::trap::dump_reset_gcsrs(),
             stack_top: 0,
             cpuid,
             power_on: false,
             init: false,
-        };
-        return ret;
+        }
     }
     pub fn get_cpuid(&self) -> usize {
         self.cpuid
@@ -161,8 +154,7 @@ pub fn cpu_start(cpuid: usize, start_addr: usize, opaque: usize) {
 }
 
 pub fn store_cpu_pointer_to_reg(pointer: usize) {
-    // println!("loongarch64 doesn't support store cpu pointer to reg, pointer: {:#x}", pointer);
-    return;
+    let _ = pointer;
 }
 
 pub fn get_target_cpu(irq: usize, zone_id: usize) -> usize {

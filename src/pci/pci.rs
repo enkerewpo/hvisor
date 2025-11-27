@@ -402,8 +402,14 @@ pub fn mmio_pci_handler(mmio: &mut MMIOAccess, base: usize) -> HvResult {
             //         }
             //     }
             // }
-            trace!("mmio pci: {} @{:#x} sz={:#x} base={:#x} v={:#x}", 
-                if mmio.is_write { "->write" } else { "<- read" }, mmio.address, mmio.size, base, mmio.value);
+            trace!(
+                "mmio pci: {} @{:#x} sz={:#x} base={:#x} v={:#x}",
+                if mmio.is_write { "->write" } else { "<- read" },
+                mmio.address,
+                mmio.size,
+                base,
+                mmio.value
+            );
             return Ok(());
         }
         false => {
@@ -412,8 +418,14 @@ pub fn mmio_pci_handler(mmio: &mut MMIOAccess, base: usize) -> HvResult {
             if header_val == 0xffffffffu32 || header_val == 0 {
                 if reg_addr == 0 && mmio.is_write == false {
                     mmio.value = header_val as _;
-                    trace!("mmio pci: {} @{:#x} sz={:#x} base={:#x} v={:#x}", 
-                        if mmio.is_write { "->write" } else { "<- read" }, mmio.address, mmio.size, base, mmio.value);
+                    trace!(
+                        "mmio pci: {} @{:#x} sz={:#x} base={:#x} v={:#x}",
+                        if mmio.is_write { "->write" } else { "<- read" },
+                        mmio.address,
+                        mmio.size,
+                        base,
+                        mmio.value
+                    );
                     return Ok(());
                 } else {
                     #[cfg(not(target_arch = "x86_64"))]
@@ -421,8 +433,14 @@ pub fn mmio_pci_handler(mmio: &mut MMIOAccess, base: usize) -> HvResult {
                     // in x86, linux will probe for pci devices automatically
                     #[cfg(target_arch = "x86_64")]
                     {
-                        trace!("mmio pci: {} @{:#x} sz={:#x} base={:#x} v={:#x}", 
-                            if mmio.is_write { "->write" } else { "<- read" }, mmio.address, mmio.size, base, mmio.value);
+                        trace!(
+                            "mmio pci: {} @{:#x} sz={:#x} base={:#x} v={:#x}",
+                            if mmio.is_write { "->write" } else { "<- read" },
+                            mmio.address,
+                            mmio.size,
+                            base,
+                            mmio.value
+                        );
                         return Ok(());
                     }
                 }
@@ -447,8 +465,14 @@ pub fn mmio_pci_handler(mmio: &mut MMIOAccess, base: usize) -> HvResult {
                     }
                 };
                 let result = pdev.phantom_mmio_handler(mmio, base, zone_id);
-                trace!("mmio pci: {} @{:#x} sz={:#x} base={:#x} v={:#x}", 
-                    if mmio.is_write { "->write" } else { "<- read" }, mmio.address, mmio.size, base, mmio.value);
+                trace!(
+                    "mmio pci: {} @{:#x} sz={:#x} base={:#x} v={:#x}",
+                    if mmio.is_write { "->write" } else { "<- read" },
+                    mmio.address,
+                    mmio.size,
+                    base,
+                    mmio.value
+                );
                 return result;
             }
         }

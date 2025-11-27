@@ -35,7 +35,8 @@ impl<'a> HyperCall<'a> {
 
     pub fn hv_zone_config_check(&self, magic_version: *mut u64) -> HyperCallResult {
         let magic_version_raw = magic_version as u64;
-        let magic_version_hva = magic_version_raw | crate::arch::mm::LOONGARCH64_CACHED_DMW_PREFIX;
+        let magic_version_hva =
+            magic_version_raw | crate::arch::consts::LOONGARCH64_CACHED_DMW_PREFIX;
         let magic_version_hva = magic_version_hva as *mut u64;
         debug!(
             "hv_zone_config_check: magic_version target addr to write = {:#x?}",
@@ -49,7 +50,7 @@ impl<'a> HyperCall<'a> {
 
     pub fn hv_get_real_pa(&mut self, config_addr: u64) -> u64 {
         // LoongArch64 uses a specific prefix for cached memory addresses.
-        let config_addr = config_addr as u64 | crate::arch::mm::LOONGARCH64_CACHED_DMW_PREFIX;
+        let config_addr = config_addr as u64 | crate::arch::consts::LOONGARCH64_CACHED_DMW_PREFIX;
         return config_addr;
     }
 

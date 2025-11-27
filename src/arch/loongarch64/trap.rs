@@ -15,6 +15,7 @@
 //      Yulong Han <wheatfox17@icloud.com>
 //
 
+use super::consts::*;
 use super::register::*;
 use super::zone::ZoneContext;
 use crate::arch::cpu::this_cpu_id;
@@ -1255,17 +1256,7 @@ fn imm12toi64(imm12: usize) -> isize {
     imm12 >> 52
 }
 
-const INT_IPI: usize = 12;
-const IPI_BIT: usize = 1 << 12;
-const TIMER_BIT: usize = 1 << 11;
-const HWI0: usize = 1 << 2;
-const HWI1: usize = 1 << 3;
-const HWI2: usize = 1 << 4;
-const HWI3: usize = 1 << 5;
-const HWI4: usize = 1 << 6;
-const HWI5: usize = 1 << 7;
-const HWI6: usize = 1 << 8;
-const HWI7: usize = 1 << 9;
+// Interrupt vector indices (LoongArch64 CRMD.IS layout)
 
 /// handle loongarch64 interrupts here
 fn handle_interrupt(is: usize) {

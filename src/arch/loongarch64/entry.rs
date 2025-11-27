@@ -14,19 +14,8 @@
 // Authors:
 //      Yulong Han <wheatfox17@icloud.com>
 //
+use crate::arch::consts::{CSR_DMW0_INIT, CSR_DMW1_INIT};
 use crate::consts::PER_CPU_SIZE;
-
-const DMW_DA_BITS: usize = 48;
-const CSR_DMW0_PLV0: usize = 1 << 0;
-const CSR_DMW0_VSEG: usize = 0x8000;
-const CSR_DMW0_BASE: usize = CSR_DMW0_VSEG << DMW_DA_BITS;
-const CSR_DMW0_INIT: usize = CSR_DMW0_BASE | CSR_DMW0_PLV0;
-
-const CSR_DMW1_PLV0: usize = 1 << 0;
-const CSR_DMW1_MAT: usize = 1 << 4;
-const CSR_DMW1_VSEG: usize = 0x9000;
-const CSR_DMW1_BASE: usize = CSR_DMW1_VSEG << DMW_DA_BITS;
-const CSR_DMW1_INIT: usize = CSR_DMW1_BASE | CSR_DMW1_PLV0 | CSR_DMW1_MAT;
 
 #[naked]
 #[no_mangle]

@@ -14,7 +14,6 @@
 // Authors:
 //      Yulong Han <wheatfox17@icloud.com>
 //
-use crate::consts::PAGE_SIZE;
 use crate::error::{HvError, HvResult};
 use crate::memory::addr::is_aligned;
 use crate::memory::mapper::Mapper;
@@ -23,15 +22,12 @@ use alloc::{sync::Arc, vec::Vec};
 use core::{fmt::Debug, marker::PhantomData, slice};
 use spin::Mutex;
 
-use loongArch64::register::pwch::{set_dir3_base, set_dir3_width, set_dir4_base, set_dir4_width};
+use loongArch64::register::pwch::{set_dir3_base, set_dir3_width};
 use loongArch64::register::pwcl::{
     set_dir1_base, set_dir1_width, set_dir2_base, set_dir2_width, set_ptbase, set_pte_width,
     set_ptwidth,
 };
-use loongArch64::register::stlbps::{self, set_ps};
-use loongArch64::register::MemoryAccessType;
-use loongArch64::register::{crmd, pwch, pwcl, tlbrentry};
-use loongArch64::register::{pgd, pgdh, pgdl};
+use loongArch64::register::stlbps;
 
 #[derive(Debug)]
 pub enum PagingError {
@@ -591,14 +587,7 @@ fn table_of_mut<'a, E>(paddr: PhysAddr) -> &'a mut [E] {
 }
 
 fn next_table_mut<'a, E: GenericPTE>(entry: &E) -> PagingResult<&'a mut [E]> {
-    // if !entry.is_present() {
-    //     Err(PagingError::NotMapped)
-    // } else if entry.is_huge() {
-    //     Err(PagingError::MappedToHugePage)
-    // } else {
-    //     Ok(table_of_mut(entry.addr()))
-    // }
-    let next_pt_addr = entry.addr() | crate::arch::mm::LOONGARCH64_CACHED_DMW_PREFIX as usize;
+    let next_pt_addr = entry.addr() | crate::arch::consts::LOONGARCH64_CACHED_DMW_PREFIX as usize;
     trace!(
         "loongarch64: next_table_mut: next_pt_addr={:#x?}",
         next_pt_addr

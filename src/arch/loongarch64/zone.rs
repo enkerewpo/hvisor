@@ -15,7 +15,9 @@
 //      Yulong Han <wheatfox17@icloud.com>
 //
 use crate::device::irqchip::ls7a2000::chip::get_extioi_sr;
+use crate::device::irqchip::ls7a2000::consts::*;
 use crate::{
+    arch::consts::*,
     arch::{cpu::this_cpu_id, trap::GLOBAL_TRAP_CONTEXT_HELPER_PER_CPU, Stage2PageTable},
     config::*,
     consts::PAGE_SIZE,
@@ -448,28 +450,10 @@ static MMIO_ACCESS_STATS: Lazy<Mutex<MMIOAccessTracker>> =
 const COMPRESSION_THRESHOLD: u64 = 40;
 const LOG_INTERVAL: u64 = 100000;
 
-const BASE_ADDR: usize = PHY_TO_DMW_UNCACHED!(0x1fe0_0000);
-const UART0_BASE: usize = PHY_TO_DMW_UNCACHED!(0x1fe0_01e0);
-const UART0_SIZE: usize = 0x8;
-const LIOINTC_MAP_BASE: usize = PHY_TO_DMW_UNCACHED!(0x1fe0_1400); // 1400-141f
-const LIOINTC_MAP_SIZE: usize = 0x20;
-const ANYSEND_BASE: usize = PHY_TO_DMW_UNCACHED!(0x1fe0_1158);
-const ANYSEND_SIZE: usize = 0x10;
-const EXTIOI_MAP_CORE_BASE: usize = PHY_TO_DMW_UNCACHED!(0x1fe0_1c00);
-const EXTIOI_MAP_CORE_SIZE: usize = 0x100;
-const EXTIOI_SR_BASE: usize = PHY_TO_DMW_UNCACHED!(0x1fe0_1700); // 1700 - 1718
-const EXTIOI_SR_SIZE: usize = 0x20;
-const EXTIOI_NODE_SEL_BASE: usize = PHY_TO_DMW_UNCACHED!(0x1fe0_14a0); // 14a0-14be
-const EXTIOI_NODE_SEL_SIZE: usize = 0x20;
-const EXTIOI_SR_CORE_BASE: usize = PHY_TO_DMW_UNCACHED!(0x1fe0_1800);
-const EXTIOI_SR_CORE_SIZE: usize = 0x400; // core0 0x1800-0x18ff, core1 0x1900-0x19ff, core2 0x1a00-0x1aff, core3 0x1b00-0x1bff
-const EXTIOI_ENABLE_BASE: usize = PHY_TO_DMW_UNCACHED!(0x1fe0_1600); // 1600 - 1618
-const EXTIOI_ENABLE_SIZE: usize = 0x20;
-const EXTIOI_BOUNCE_BASE: usize = PHY_TO_DMW_UNCACHED!(0x1fe0_1680); // 1680 - 1698
-const EXTIOI_BOUNCE_SIZE: usize = 0x20;
+// MMIO ranges imported from `ls7a2000::consts`.
 
 pub fn offset(addr: usize) -> usize {
-    addr - BASE_ADDR
+    addr - MMIO_BASE
 }
 
 macro_rules! is_in_mmio_range {
@@ -497,7 +481,7 @@ fn handle_extioi_status_mmio(mmio: &mut MMIOAccess, base_addr: usize, size: usiz
     let guest_cpu_sr_start = EXTIOI_SR_CORE_BASE + guest_fake_cpu_id * 0x100;
     let compensation_offset = target_cpu_sr_start - guest_cpu_sr_start;
     mmio.address += compensation_offset; // since inside each cpu's SR regs region, the "inner offset" should be retained!
-    mmio_perform_access(BASE_ADDR, mmio); // 1fe0_0000, do not use anything else - wheatfox
+    mmio_perform_access(MMIO_BASE, mmio); // 1fe0_0000, do not use anything else - wheatfox
     Ok(())
 }
 
@@ -633,7 +617,7 @@ fn handle_mmio_stats(mmio: &mut MMIOAccess) {
 pub fn loongarch_generic_mmio_handler(mmio: &mut MMIOAccess, arg: usize) -> HvResult {
     // if in uart0 region 0x1fe0_0000-0x1fe0_0008, we don't print it
     if is_in_mmio_range!(mmio.address, UART0_BASE, UART0_SIZE) {
-        return handle_uart_mmio(mmio, BASE_ADDR);
+        return handle_uart_mmio(mmio, MMIO_BASE);
     }
 
     let ret;
@@ -647,24 +631,24 @@ pub fn loongarch_generic_mmio_handler(mmio: &mut MMIOAccess, arg: usize) -> HvRe
             info!("nonroot's write to extioi enable regs, ignored");
             return Ok(());
         } else {
-            ret = handle_generic_mmio(mmio, BASE_ADDR);
+            ret = handle_generic_mmio(mmio, MMIO_BASE);
         }
     } else if is_in_mmio_range!(mmio.address, EXTIOI_BOUNCE_BASE, EXTIOI_BOUNCE_SIZE) {
         if this_cpu_id() != 0 && mmio.is_write {
             info!("nonroot's write to extioi bounce regs, ignored");
             return Ok(());
         } else {
-            ret = handle_generic_mmio(mmio, BASE_ADDR);
+            ret = handle_generic_mmio(mmio, MMIO_BASE);
         }
     } else if is_in_mmio_range!(mmio.address, EXTIOI_NODE_SEL_BASE, EXTIOI_NODE_SEL_SIZE) {
         if this_cpu_id() != 0 && mmio.is_write {
             info!("nonroot's write to extioi node sel regs, ignored");
             return Ok(());
         } else {
-            ret = handle_generic_mmio(mmio, BASE_ADDR);
+            ret = handle_generic_mmio(mmio, MMIO_BASE);
         }
     } else {
-        ret = handle_generic_mmio(mmio, BASE_ADDR);
+        ret = handle_generic_mmio(mmio, MMIO_BASE);
     }
 
     // since our mmio can be altered inside the handler, we update the stats here

@@ -15,49 +15,37 @@
 //      Yulong Han <wheatfox17@icloud.com>
 //
 use crate::{
-    arch::s1pt::Stage1PageTable,
-    arch::s2pt::Stage2PageTable,
-    consts::PAGE_SIZE,
-    error::HvResult,
-    memory::{
-        addr::{align_down, align_up},
-        GuestPhysAddr, HostPhysAddr, MemFlags, MemoryRegion, MemorySet,
+    arch::loongarch64::consts::{
+        LOONGARCH64_CACHED_DMW_PREFIX, LOONGARCH64_PHY_ADDR_MASK, LOONGARCH64_UNCACHED_DMW_PREFIX,
     },
+    arch::s2pt::Stage2PageTable,
+    error::HvResult,
+    memory::MemorySet,
 };
-use spin::*;
 
-pub const LOONGARCH64_CACHED_DMW_PREFIX: u64 = 0x9000_0000_0000_0000;
-pub const LOONGARCH64_UNCACHED_DMW_PREFIX: u64 = 0x8000_0000_0000_0000;
+#[macro_export]
+macro_rules! DMW_TO_PHY {
+    ($addr:expr) => {
+        ($addr as u64 & crate::arch::consts::LOONGARCH64_PHY_ADDR_MASK as u64) as usize
+    };
+}
+
+#[macro_export]
+macro_rules! PHY_TO_DMW_CACHED {
+    ($addr:expr) => {
+        ($addr as u64 | crate::arch::consts::LOONGARCH64_CACHED_DMW_PREFIX) as usize
+    };
+}
+
+#[macro_export]
+macro_rules! PHY_TO_DMW_UNCACHED {
+    ($addr:expr) => {
+        ($addr as u64 | crate::arch::consts::LOONGARCH64_UNCACHED_DMW_PREFIX) as usize
+    };
+}
 
 pub fn init_hv_page_table() -> HvResult {
     todo!();
-    // let mut hv_pt: MemorySet<Stage1PageTable> = MemorySet::new(4);
-    // // let mem_region = fdt.memory().regions().next().unwrap();
-    // // info!("loongarch64: mm: mem_region: {:#x?}", mem_region);
-    // // find all serial
-    // for node in fdt.find_all_nodes("/platform/serial") {
-    //     if let Some(reg) = node.reg().and_then(|mut reg| reg.next()) {
-    //         let paddr = reg.starting_address as HostPhysAddr;
-    //         let size = reg.size.unwrap();
-    //         info!(
-    //             "loongarch64: mm: map serial addr: {:#x}, size: {:#x}",
-    //             paddr, size
-    //         );
-    //         let paddr = align_down(paddr);
-    //         let size = align_up(size);
-    //         hv_pt.insert(MemoryRegion::new_with_offset_mapper(
-    //             paddr as GuestPhysAddr,
-    //             paddr,
-    //             size,
-    //             MemFlags::READ | MemFlags::WRITE | MemFlags::IO,
-    //         ))?;
-    //     }
-    // }
-    // info!("loongarch64: mm: init_hv_page_table done");
-    // debug!("Hypervisor virtual memory set: {:#x?}", hv_pt);
-
-    // HV_PT.call_once(|| RwLock::new(hv_pt));
-    // Ok(())
 }
 
 pub fn new_s2_memory_set() -> MemorySet<Stage2PageTable> {
