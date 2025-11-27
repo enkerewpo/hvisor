@@ -12,7 +12,7 @@
 //      https://www.syswonder.org
 //
 // Authors:
-//      Yulong Han <wheatfox17@icloud.com>
+//      Ming Shen <boneinscri@outlook.com>
 //
 use bit_field::BitField;
 impl_define_csr!(MerrCtl, "Machine Error Controller\n\

@@ -12,7 +12,7 @@
 //      https://www.syswonder.org
 //
 // Authors:
-//      Yulong Han <wheatfox17@icloud.com>
+//      Ming Shen <boneinscri@outlook.com>
 //
 impl_define_csr!(MerrEntry,"Machine Error Exception Entry Base Address (MERRENTRY)\n\
                             This register is used to configure the entry base address of the machine error exception.\n\

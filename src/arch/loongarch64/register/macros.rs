@@ -11,13 +11,9 @@
 // Syswonder Website:
 //      https://www.syswonder.org
 //
-// Authors:
-//      Yulong Han <wheatfox17@icloud.com>
 //
-/*
-    this file is forked from extern crate loongArch64::register::macros;
-    wheatfox
-*/
+// this file is forked from extern crate loongArch64::register::macros (https://github.com/Godones/loongArch64)
+
 #![allow(unused)]
 macro_rules! impl_tlbelo {
     ($ident:ident,$number:expr) => {

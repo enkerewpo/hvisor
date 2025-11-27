@@ -12,7 +12,7 @@
 //      https://www.syswonder.org
 //
 // Authors:
-//      Yulong Han <wheatfox17@icloud.com>
+//      Ming Shen <boneinscri@outlook.com>
 //
 impl_define_csr!(MerrEra,"Machine Error Exception Data Save Register\n\
                           This register is used to record the PC of the instruction that triggered the machine error exception.");

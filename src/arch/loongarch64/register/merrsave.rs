@@ -12,7 +12,7 @@
 //      https://www.syswonder.org
 //
 // Authors:
-//      Yulong Han <wheatfox17@icloud.com>
+//      Ming Shen <boneinscri@outlook.com>
 //
 impl_define_csr!(MerrSave, "Machine Error Exception Data Save Register\n\
                             This register is used to store data temporarily for the system software.\n\
