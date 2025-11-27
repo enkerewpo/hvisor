@@ -31,6 +31,14 @@ pub const LOONGARCH64_CACHED_DMW_PREFIX: u64 = 0x9000_0000_0000_0000;
 pub const LOONGARCH64_UNCACHED_DMW_PREFIX: u64 = 0x8000_0000_0000_0000;
 pub const LOONGARCH64_PHY_ADDR_MASK: usize = 0x0000_ffff_ffff_ffff;
 
+// Trap exception codes (ECODE values).
+pub const ECODE_INT: usize = 0x0;
+pub const ECODE_PIL: usize = 0x1;
+pub const ECODE_PIS: usize = 0x2;
+pub const ECODE_PNR: usize = 0x5;
+pub const ECODE_GSPR: usize = 0x16;
+pub const ECODE_HVC: usize = 0x17;
+
 // LoongArch64 interrupt indices (CRMD.IS layout).
 pub const INT_SWI0: usize = 0;
 pub const INT_SWI1: usize = 1;
@@ -54,6 +62,24 @@ pub const HWI4: usize = 1 << (INT_HWI0_IDX + 4);
 pub const HWI5: usize = 1 << (INT_HWI0_IDX + 5);
 pub const HWI6: usize = 1 << (INT_HWI0_IDX + 6);
 pub const HWI7: usize = 1 << (INT_HWI0_IDX + 7);
+
+// Instruction opcodes for trap emulation (LoongArch64).
+pub const OPCODE_CPUCFG: usize = 0b0000000000000000011011;
+pub const OPCODE_CPUCFG_LENGTH: usize = 22;
+pub const OPCODE_CACOP: usize = 0b0000011000;
+pub const OPCODE_CACOP_LENGTH: usize = 10;
+pub const OPCODE_IDLE: usize = 0b00000_11001_0010001;
+pub const OPCODE_IDLE_LENGTH: usize = 17;
+pub const OPCODE_CSRX: usize = 0b00000100;
+pub const OPCODE_CSRX_LENGTH: usize = 8;
+pub const OPCODE_IOCSR: usize = 0b00000_11001_001000000;
+pub const OPCODE_IOCSR_LENGTH: usize = 19;
+pub const OPCODE_LD_B: usize = 0b0010100000;
+pub const OPCODE_LD_B_LENGTH: usize = 10;
+pub const OPCODE_ST_B: usize = 0b0010100100;
+pub const OPCODE_ST_B_LENGTH: usize = 10;
+pub const OPCODE_LD_BU: usize = 0b0010101000;
+pub const OPCODE_LD_BU_LENGTH: usize = 10;
 
 // PCI / HT constants
 /// Turn to virtual address for HT accessing.

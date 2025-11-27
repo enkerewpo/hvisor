@@ -579,7 +579,7 @@ fn handle_mmio_stats(mmio: &mut MMIOAccess) {
     let last_value = stats.last_value.load(Ordering::SeqCst);
     let is_compressed = stats.is_compressed.load(Ordering::SeqCst);
 
-    let trap_context_helper = GLOBAL_TRAP_CONTEXT_HELPER_PER_CPU[this_cpu_id()].lock();
+    let trap_context_helper = unsafe { &GLOBAL_TRAP_CONTEXT_HELPER_PER_CPU[this_cpu_id()] };
     let mut msg1 = format!(
         "loongarch64: generic mmio handler, zone_era={:#x}, offset={:#x}, size={}, {} {:#x}",
         trap_context_helper.era,

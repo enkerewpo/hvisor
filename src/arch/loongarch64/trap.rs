@@ -23,6 +23,7 @@ use crate::arch::ipi::*;
 use crate::consts::{IPI_EVENT_CLEAR_INJECT_IRQ, MAX_CPU_NUM};
 use crate::device::irqchip::inject_irq;
 use crate::device::irqchip::ls7a2000::chip::*;
+use crate::device::irqchip::ls7a2000::consts::UART0_BASE;
 use crate::event::{check_events, dump_cpu_events, dump_events};
 use crate::hypercall::{SGI_IPI_ID, *};
 use crate::memory::{addr, mmio_handle_access, MMIOAccess};
@@ -37,8 +38,8 @@ use loongArch64::register;
 use loongArch64::register::ecfg::LineBasedInterrupt;
 use loongArch64::register::*;
 use loongArch64::time;
-use spin::Mutex;
 
+#[derive(Copy, Clone)]
 pub struct TrapContextHelper {
     pub ecode: usize,
     pub esubcode: usize,
@@ -78,10 +79,8 @@ impl TrapContextHelper {
     }
 }
 
-const GLOBAL_TRAP_CONTEXT_HELPER_PER_CPU_INITDATA: Mutex<TrapContextHelper> =
-    Mutex::new(TrapContextHelper::new());
-pub static GLOBAL_TRAP_CONTEXT_HELPER_PER_CPU: [Mutex<TrapContextHelper>; MAX_CPU_NUM] =
-    [GLOBAL_TRAP_CONTEXT_HELPER_PER_CPU_INITDATA; MAX_CPU_NUM];
+pub static mut GLOBAL_TRAP_CONTEXT_HELPER_PER_CPU: [TrapContextHelper; MAX_CPU_NUM] =
+    [TrapContextHelper::new(); MAX_CPU_NUM];
 
 pub fn install_trap_vector() {
     // force disable INT here
@@ -252,9 +251,8 @@ pub fn trap_handler(mut ctx: &mut ZoneContext) {
     let tlbrelo1_ = tlbrelo1::read();
 
     // update global trap context helper
-    GLOBAL_TRAP_CONTEXT_HELPER_PER_CPU[this_cpu_id()]
-        .lock()
-        .update(
+    unsafe {
+        GLOBAL_TRAP_CONTEXT_HELPER_PER_CPU[this_cpu_id()].update(
             ecode,
             esubcode,
             is,
@@ -262,6 +260,7 @@ pub fn trap_handler(mut ctx: &mut ZoneContext) {
             badi_.inst() as usize,
             era_.raw(),
         );
+    }
 
     let mut is_idle = false;
     if ecode == ECODE_GSPR && badi_.inst() == 0b0000_0110_0100_1000_1000_0000_0000_0000 {
@@ -343,13 +342,6 @@ pub fn trap_handler(mut ctx: &mut ZoneContext) {
         _vcpu_return(_ctx_ptr as usize);
     }
 }
-
-const ECODE_INT: usize = 0x0;
-const ECODE_GSPR: usize = 0x16;
-const ECODE_PIL: usize = 0x1;
-const ECODE_PIS: usize = 0x2;
-const ECODE_HVC: usize = 0x17;
-const ECODE_PNR: usize = 0x5;
 
 fn handle_exception(
     ecode: usize,
@@ -1654,9 +1646,6 @@ fn emulate_iocsr_legacy(ins: usize, ctx: &mut ZoneContext) {
     }
 }
 
-const UART0_BASE: usize = 0x1fe001e0;
-const UART0_END: usize = 0x1fe001e8;
-
 fn emulate_ld_b(ins: usize, ctx: &mut ZoneContext) {
     // ld.b   rd, rj, si12  opcode[31:22]=0010100000 si12[21:10] rj[9:5] rd[4:0]
     // let rd = ins & 0x1f;
@@ -1716,22 +1705,6 @@ fn check_op_type(inst: usize, opcode: usize, opcode_length: usize) -> bool {
     (shifted & mask) == opcode
 }
 
-const OPCODE_CPUCFG: usize = 0b0000000000000000011011;
-const OPCODE_CPUCFG_LENGTH: usize = 22;
-const OPCODE_CACOP: usize = 0b0000011000;
-const OPCODE_CACOP_LENGTH: usize = 10;
-const OPCODE_IDLE: usize = 0b00000_11001_0010001;
-const OPCODE_IDLE_LENGTH: usize = 17;
-const OPCODE_CSRX: usize = 0b00000100;
-const OPCODE_CSRX_LENGTH: usize = 8;
-const OPCODE_IOCSR: usize = 0b00000_11001_001000000;
-const OPCODE_IOCSR_LENGTH: usize = 19;
-const OPCODE_LD_B: usize = 0b0010100000;
-const OPCODE_LD_B_LENGTH: usize = 10;
-const OPCODE_ST_B: usize = 0b0010100100;
-const OPCODE_ST_B_LENGTH: usize = 10;
-const OPCODE_LD_BU: usize = 0b0010101000;
-const OPCODE_LD_BU_LENGTH: usize = 10;
 type OpcodeHandler = fn(usize, &mut ZoneContext);
 
 fn emulate_instruction(era: usize, ins: usize, ctx: &mut ZoneContext) {
