@@ -16,6 +16,7 @@
 //
 
 use crate::arch::loongarch64::consts::*;
+use crate::arch::loongarch64::trap::context::LdStInst;
 use crate::arch::loongarch64::zone::ZoneContext;
 use crate::arch::register::*;
 
@@ -159,4 +160,93 @@ pub fn dump_reset_gcsrs() -> ZoneContext {
     ctx.gcsr_dmw3 = read_gcsr_dmw3();
 
     ctx
+}
+
+pub fn decode_ldst(ins: usize, ctx: &ZoneContext) -> LdStInst {
+    let prefix6 = extract_field(ins, 26, 6);
+    match prefix6 {
+        0b001010 => decode_ldst_std(ins, ctx),
+        0b001001 => decode_ldst_ptr(ins, ctx),
+        0b001110 => decode_ldst_ext(ins, ctx),
+        _ => panic!("unhandled instruction: {:#b}/{:#x}", ins, ins),
+    }
+}
+
+fn decode_ldst_std(ins: usize, ctx: &ZoneContext) -> LdStInst {
+    let rd = extract_field(ins, 0, 5);
+    let ty = extract_field(ins, 24, 2);
+    let sz = extract_field(ins, 22, 2);
+
+    let (is_write, is_u, value) = match ty {
+        0b00 => (false, false, 0),
+        0b01 => (true, false, ctx.x[rd]),
+        0b10 => (false, true, 0),
+        _ => panic!("unhandled type"),
+    };
+
+    let size = match sz {
+        0b00 => 1,
+        0b01 => 2,
+        0b10 => 4,
+        0b11 => 8,
+        _ => panic!("unhandled size"),
+    };
+
+    LdStInst {
+        rd,
+        size,
+        is_write,
+        is_u,
+        value,
+    }
+}
+
+fn decode_ldst_ptr(ins: usize, ctx: &ZoneContext) -> LdStInst {
+    let rd = extract_field(ins, 0, 5);
+    let ty = extract_field(ins, 24, 2);
+
+    let (is_write, size, value) = match ty {
+        0b00 => (false, 4, 0),
+        0b01 => (true, 4, ctx.x[rd]),
+        0b10 => (false, 8, 0),
+        0b11 => (true, 8, ctx.x[rd]),
+        _ => panic!("unhandled size"),
+    };
+
+    LdStInst {
+        rd,
+        size,
+        is_write,
+        is_u: false,
+        value,
+    }
+}
+
+fn decode_ldst_ext(ins: usize, ctx: &ZoneContext) -> LdStInst {
+    let rd = extract_field(ins, 0, 5);
+    let sz = extract_field(ins, 18, 2);
+    let ty = extract_field(ins, 20, 2);
+
+    let (is_write, is_u, value) = match ty {
+        0b00 => (false, false, 0),
+        0b01 => (true, false, ctx.x[rd]),
+        0b10 => (false, true, 0),
+        _ => panic!("unhandled type"),
+    };
+
+    let size = match sz {
+        0b00 => 1,
+        0b01 => 2,
+        0b10 => 4,
+        0b11 => 8,
+        _ => panic!("unhandled size"),
+    };
+
+    LdStInst {
+        rd,
+        size,
+        is_write,
+        is_u,
+        value,
+    }
 }

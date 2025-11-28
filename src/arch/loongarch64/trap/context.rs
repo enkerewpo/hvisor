@@ -59,3 +59,16 @@ impl TrapContextHelper {
 
 pub static mut GLOBAL_TRAP_CONTEXT_HELPER_PER_CPU: [TrapContextHelper; MAX_CPU_NUM] =
     [TrapContextHelper::new(); MAX_CPU_NUM];
+
+pub struct TimerState {
+    pub expire: usize,
+    pub cfg: usize,
+}
+
+pub struct LdStInst {
+    pub rd: usize,
+    pub size: usize,
+    pub is_write: bool,
+    pub is_u: bool,
+    pub value: usize,
+}
