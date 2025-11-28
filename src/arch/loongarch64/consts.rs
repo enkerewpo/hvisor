@@ -13,6 +13,9 @@
 //
 // Authors:
 //  ForeverYolo <2572131118@qq.com>
+//  Yulong Han <wheatfox17@icloud.com>
+
+use crate::PHY_TO_DMW_UNCACHED;
 
 pub const DMW_DA_BITS: usize = 48;
 pub const CSR_DMW0_PLV0: usize = 1 << 0;
@@ -150,7 +153,7 @@ pub const GCSR_DMW2: usize = 0x182;
 pub const GCSR_DMW3: usize = 0x183;
 
 // IPI MMIO base addresses and offsets.
-pub const IPI_MMIO_BASE: usize = 0x8000_0000_1fe0_0000;
+pub const IPI_MMIO_BASE: usize = PHY_TO_DMW_UNCACHED!(0x1fe0_0000);
 pub const IPI_ANY_SEND_BASE: usize = IPI_MMIO_BASE + 0x1158;
 pub const IPI_MMIO_IPI_SEND: usize = IPI_MMIO_BASE + 0x1040; // 32 bits Write Only
 pub const IPI_MMIO_MAIL_SEND: usize = IPI_MMIO_BASE + 0x1048; // 64 bits Write Only

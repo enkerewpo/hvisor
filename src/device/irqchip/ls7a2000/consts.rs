@@ -72,9 +72,9 @@ pub const CHIP_HT_CONFIG_BASE: usize = PHY_TO_DMW_UNCACHED!(0xfd_fb00_0000); // 
 pub const CHIP_HT_INT_VECTOR_BASE: usize = CHIP_HT_CONFIG_BASE + 0x80;
 pub const CHIP_HT_INT_EN_BASE: usize = CHIP_HT_CONFIG_BASE + 0xa0;
 
-pub const PCI_STANDARD_CONFIG_BASE_ALT: usize = 0x8000_0000_1a00_0000;
-pub const PCI_STANDARD_CONFIG_BASE: usize = 0x8000_0efd_fe00_0000;
-pub const PCI_RESERVED_CONFIG_BASE: usize = 0x8000_0efe_0000_0000;
+pub const PCI_STANDARD_CONFIG_BASE_ALT: usize = PHY_TO_DMW_UNCACHED!(0x1a00_0000);
+pub const PCI_STANDARD_CONFIG_BASE: usize = PHY_TO_DMW_UNCACHED!(0xefd_fe00_0000);
+pub const PCI_RESERVED_CONFIG_BASE: usize = PHY_TO_DMW_UNCACHED!(0xefe_0000_0000);
 
 // Loongson PCI IDs (see https://admin.pci-ids.ucw.cz/read/PC/0014).
 pub const PCI_VENDOR_ID_LOONGSON: usize = 0x0014;
