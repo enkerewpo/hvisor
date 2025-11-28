@@ -21,6 +21,7 @@ use chip::*;
 
 pub mod chip;
 pub mod consts;
+pub mod virt;
 
 pub fn primary_init_early() {
     if this_cpu_id() != 0 {
