@@ -148,3 +148,15 @@ pub const GCSR_DMW0: usize = 0x180;
 pub const GCSR_DMW1: usize = 0x181;
 pub const GCSR_DMW2: usize = 0x182;
 pub const GCSR_DMW3: usize = 0x183;
+
+// IPI MMIO base addresses and offsets.
+pub const IPI_MMIO_BASE: usize = 0x8000_0000_1fe0_0000;
+pub const IPI_ANY_SEND_BASE: usize = IPI_MMIO_BASE + 0x1158;
+pub const IPI_MMIO_IPI_SEND: usize = IPI_MMIO_BASE + 0x1040; // 32 bits Write Only
+pub const IPI_MMIO_MAIL_SEND: usize = IPI_MMIO_BASE + 0x1048; // 64 bits Write Only
+
+// IPI action codes.
+pub const SMP_BOOT_CPU: usize = 0x1;
+pub const SMP_RESCHEDULE: usize = 0x2;
+pub const SMP_CALL_FUNCTION: usize = 0x4;
+pub const HVISOR_START_VCPU: usize = 0x8;

@@ -14,6 +14,7 @@
 // Authors:
 //      Yulong Han <wheatfox17@icloud.com>
 //
+use super::consts::SMP_BOOT_CPU;
 use super::ipi::*;
 use super::zone::ZoneContext;
 use crate::device::common::MMIODerefWrapper;

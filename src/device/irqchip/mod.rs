@@ -151,7 +151,9 @@ pub mod ls7a2000;
 pub mod pic;
 
 #[cfg(target_arch = "loongarch64")]
-pub use ls7a2000::{inject_irq, percpu_init, primary_init_early, primary_init_late};
+pub use crate::arch::loongarch64::irq::inject_irq;
+#[cfg(target_arch = "loongarch64")]
+pub use ls7a2000::{percpu_init, primary_init_early, primary_init_late};
 
 #[cfg(target_arch = "x86_64")]
 pub use pic::{inject_irq, inject_vector, percpu_init, primary_init_early, primary_init_late};

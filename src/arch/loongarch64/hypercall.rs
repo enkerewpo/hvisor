@@ -27,7 +27,7 @@ impl<'a> HyperCall<'a> {
     }
 
     pub fn wait_for_interrupt(&mut self, irq_list: &mut [u64; MAX_DEVS + 1]) {
-        use crate::device::irqchip::ls7a2000::*;
+        use crate::arch::loongarch64::irq::GLOBAL_IRQ_INJECT_STATUS;
         let status = GLOBAL_IRQ_INJECT_STATUS.lock();
         drop(status);
         irq_list[0] = 0; // CAUTION: this is a workaround for loongarch64

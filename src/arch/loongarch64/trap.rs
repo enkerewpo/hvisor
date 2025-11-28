@@ -20,8 +20,8 @@ use super::register::*;
 use super::zone::ZoneContext;
 use crate::arch::cpu::this_cpu_id;
 use crate::arch::ipi::*;
+use crate::arch::loongarch64::irq::inject_irq;
 use crate::consts::{IPI_EVENT_CLEAR_INJECT_IRQ, MAX_CPU_NUM};
-use crate::device::irqchip::inject_irq;
 use crate::device::irqchip::ls7a2000::chip::*;
 use crate::device::irqchip::ls7a2000::consts::UART0_BASE;
 use crate::event::{check_events, dump_cpu_events, dump_events};
@@ -1282,7 +1282,7 @@ fn handle_interrupt(is: usize) {
     if is & TIMER_BIT != 0 {
         warn!("Timer interrupt received");
         loongArch64::register::ticlr::clear_timer_interrupt();
-        crate::device::irqchip::ls7a2000::clear_hwi_injected_irq();
+        crate::arch::loongarch64::irq::clear_hwi_injected_irq();
         return;
     }
 

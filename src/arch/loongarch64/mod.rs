@@ -23,6 +23,7 @@ pub mod entry;
 pub mod hypercall;
 pub mod iommu;
 pub mod ipi;
+pub mod irq;
 pub mod mm;
 pub mod paging;
 pub mod register;

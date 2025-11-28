@@ -14,6 +14,10 @@
 // Authors:
 //      Yulong Han <wheatfox17@icloud.com>
 //
+use crate::arch::consts::{
+    HVISOR_START_VCPU, IPI_ANY_SEND_BASE, IPI_MMIO_BASE, IPI_MMIO_IPI_SEND, IPI_MMIO_MAIL_SEND,
+    SMP_BOOT_CPU, SMP_CALL_FUNCTION, SMP_RESCHEDULE,
+};
 use crate::arch::cpu::this_cpu_id;
 use crate::consts::IPI_EVENT_CLEAR_INJECT_IRQ;
 use crate::device::common::MMIODerefWrapper;
@@ -66,10 +70,6 @@ register_structs! {
   }
 }
 
-const MMIO_BASE: usize = 0x8000_0000_1fe0_0000;
-const IPI_MMIO_BASE: usize = MMIO_BASE;
-const IPI_ANY_SEND_BASE: usize = MMIO_BASE + 0x1158;
-
 // IPI registers, use this if you don't want to use the percore-IPI feature
 pub static CORE0_IPI: MMIODerefWrapper<IpiRegisters> =
     unsafe { MMIODerefWrapper::new(IPI_MMIO_BASE + 0x1000) };
@@ -79,13 +79,6 @@ pub static CORE2_IPI: MMIODerefWrapper<IpiRegisters> =
     unsafe { MMIODerefWrapper::new(IPI_MMIO_BASE + 0x1200) };
 pub static CORE3_IPI: MMIODerefWrapper<IpiRegisters> =
     unsafe { MMIODerefWrapper::new(IPI_MMIO_BASE + 0x1300) };
-
-// ipi actions
-pub const SMP_BOOT_CPU: usize = 0x1;
-pub const SMP_RESCHEDULE: usize = 0x2;
-pub const SMP_CALL_FUNCTION: usize = 0x4;
-// customized actions :), since there is no docs on this yet
-pub const HVISOR_START_VCPU: usize = 0x8;
 
 fn iocsr_mbuf_send_box_lo(a: usize) -> usize {
     a << 1
@@ -128,9 +121,6 @@ fn ffs(a: usize) -> usize {
     }
     i + 1
 }
-
-const IPI_MMIO_IPI_SEND: usize = MMIO_BASE + 0x1040; // 32 bits Write Only
-const IPI_MMIO_MAIL_SEND: usize = MMIO_BASE + 0x1048; // 64 bits Write Only
 
 pub fn ipi_write_action_percore(cpu_id: usize, _action: usize) {
     let mut action = _action;
@@ -329,7 +319,7 @@ pub fn arch_check_events(event: Option<usize>) {
     match event {
         Some(IPI_EVENT_CLEAR_INJECT_IRQ) => {
             // clear the injected IPI interrupt
-            use crate::device::irqchip::ls7a2000::clear_hwi_injected_irq;
+            use crate::arch::loongarch64::irq::clear_hwi_injected_irq;
             clear_hwi_injected_irq();
         }
         _ => {
