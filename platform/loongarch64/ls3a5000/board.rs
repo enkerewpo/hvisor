@@ -209,6 +209,7 @@ pub const ROOT_PCI_DEVS: &[HvPciDevConfig] = &[
     pci_dev!(0x0, 0x2, 0x0, 0x0, VpciDevType::Physical), // 02:00.0
     pci_dev!(0x0, 0x5, 0x0, 0x0, VpciDevType::Physical), // 05:00.0
     pci_dev!(0x0, 0x6, 0x0, 0x0, VpciDevType::Physical), // 06:00.0
+    pci_dev!(0x0, 0x8, 0x0, 0x0, VpciDevType::Physical), // 0a:00.0 (SZ M.2 SSD bus)
 ];
 
 // bus << 8 | dev << 5 | func << 3

@@ -221,19 +221,10 @@ pub static UART0: Mutex<Uart> = Mutex::new(Uart::new(0));
 pub static UART1: Mutex<Uart> = Mutex::new(Uart::new(1));
 
 pub fn console_putchar(c: u8) {
-    UART0.lock().putchar(c);
+    // UART0.lock().putchar(c);
+    UART1.lock().putchar(c);
 }
 
 pub fn console_getchar() -> Option<u8> {
-    UART0.lock().getchar().into()
-}
-
-pub fn __test_uart1() {
-    info!("loongarch: uart: __test_uart1");
-    let mut uart1 = UART1.lock();
-    uart1.init();
-    info!("loongarch: uart: __test_uart1 init done");
-    let s = "Hello, UART1!\n";
-    uart1.send_str(s);
-    info!("loongarch: uart: __test_uart1 send_str test done");
+    todo!()
 }
