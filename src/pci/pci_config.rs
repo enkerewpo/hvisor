@@ -367,7 +367,7 @@ impl Zone {
                         }
                     }
                 } else {
-                    // warn!("can not find dev {:#?}", bdf);
+                    warn!("can not find dev {:#?} in GLOBAL_PCIE_LIST (not detected during enumeration)", bdf);
                     #[cfg(feature = "ecam_pcie")]
                     {
                         let dev_type = dev_config.dev_type;

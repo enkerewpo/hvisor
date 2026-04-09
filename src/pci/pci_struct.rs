@@ -143,7 +143,7 @@ impl ConfigValue {
 const MAX_DEVICE: u8 = 31;
 const MAX_FUNCTION: u8 = 7;
 pub const CONFIG_LENTH: u64 = 256;
-pub const BIT_LENTH: usize = 128 * 8;
+pub const BIT_LENTH: usize = 512 * 8; // 4096 bytes = full PCIe extended config space
 
 // PCIe Device/Port Type values
 const PCI_EXP_TYPE_ROOT_PORT: u16 = 4;
@@ -1318,12 +1318,42 @@ impl<B: BarAllocator> Iterator for PciIterator<B> {
                 self.next(match node.config_value.get_class().0 {
                     // class code 0x6 is bridge and class.1 0x0 is host bridge
                     0x6 if node.config_value.get_class().1 == 0x4 => {
-                        let bdf = Bdf::new(domain, parent.subordinate_bus + 1, 0, 0);
+                        // When no_pcie_bar_realloc is enabled, use the firmware-programmed
+                        // secondary bus number instead of calculating our own. The firmware
+                        // (UEFI/BIOS) has already assigned correct bus numbers, and our
+                        // calculated bus may not match (e.g., firmware may skip bus numbers
+                        // for subordinate bus reservation).
+                        #[cfg(feature = "no_pcie_bar_realloc")]
+                        let next_bus = {
+                            let bridge_base = node.get_base();
+                            let bus_reg = unsafe {
+                                let ptr = PciConfigMmio::new(bridge_base, CONFIG_LENTH)
+                                    .access::<u32>(0x18);
+                                ptr.read_volatile()
+                            };
+                            let fw_secondary = ((bus_reg >> 8) & 0xFF) as u8;
+                            let fw_subordinate = ((bus_reg >> 16) & 0xFF) as u8;
+                            info!(
+                                "bridge {:#?}: firmware secondary_bus={:#x}, subordinate_bus={:#x}",
+                                node.bdf, fw_secondary, fw_subordinate
+                            );
+                            if fw_secondary != 0 {
+                                fw_secondary
+                            } else {
+                                // Firmware didn't program this bridge, fall back to calculated
+                                parent.subordinate_bus + 1
+                            }
+                        };
+                        #[cfg(not(feature = "no_pcie_bar_realloc"))]
+                        let next_bus = parent.subordinate_bus + 1;
+
+                        let bdf = Bdf::new(domain, next_bus, 0, 0);
                         Some(self.get_bridge().next_bridge(
                             self.address(parent_bus, bdf),
                             node.has_secondary_link(),
                             self.is_mulitple_function,
                             self.function,
+                            next_bus,
                         ))
                     }
                     _ => None,
@@ -1392,14 +1422,15 @@ impl Bridge {
         has_secondary_link: bool,
         is_mulitple_function: bool,
         function: u8,
+        target_bus: u8,
     ) -> Self {
         let mmio = PciConfigMmio::new(address, CONFIG_LENTH);
         Self {
-            bus: self.subordinate_bus + 1,
+            bus: target_bus,
             device: 0,
             function,
-            subordinate_bus: self.subordinate_bus + 1,
-            secondary_bus: self.subordinate_bus + 1,
+            subordinate_bus: target_bus,
+            secondary_bus: target_bus,
             primary_bus: self.bus,
             mmio,
             has_secondary_link,
@@ -1412,14 +1443,22 @@ impl Bridge {
         if self.mmio.is_placeholder() {
             return;
         }
-        // we need to update the bridge bus number if we want linux not to update bus number
-        unsafe {
-            let ptr = self.mmio.access::<u32>(0x18);
-            let mut value = ptr.read_volatile();
-            value.set_bits(16..24, self.subordinate_bus.into());
-            value.set_bits(8..16, self.secondary_bus.into());
-            value.set_bits(0..8, self.primary_bus.into());
-            ptr.write_volatile(value);
+        // When no_pcie_bar_realloc is enabled, firmware already assigned correct bus
+        // numbers — don't overwrite them.
+        #[cfg(feature = "no_pcie_bar_realloc")]
+        return;
+
+        #[cfg(not(feature = "no_pcie_bar_realloc"))]
+        {
+            // we need to update the bridge bus number if we want linux not to update bus number
+            unsafe {
+                let ptr = self.mmio.access::<u32>(0x18);
+                let mut value = ptr.read_volatile();
+                value.set_bits(16..24, self.subordinate_bus.into());
+                value.set_bits(8..16, self.secondary_bus.into());
+                value.set_bits(0..8, self.primary_bus.into());
+                ptr.write_volatile(value);
+            }
         }
     }
 

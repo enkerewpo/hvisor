@@ -221,7 +221,7 @@ pub static UART0: Mutex<Uart> = Mutex::new(Uart::new(0));
 pub static UART1: Mutex<Uart> = Mutex::new(Uart::new(1));
 
 pub fn console_putchar(c: u8) {
-    // UART0.lock().putchar(c);
+    UART0.lock().putchar(c);
     UART1.lock().putchar(c);
 }
 

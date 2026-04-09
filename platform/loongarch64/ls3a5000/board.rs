@@ -23,7 +23,7 @@ pub const BOARD_NCPUS: usize = 4;
 
 pub const ROOT_ZONE_DTB_ADDR: u64 = 0x10000f000;
 pub const ROOT_ZONE_KERNEL_ADDR: u64 = 0x200000;
-pub const ROOT_ZONE_ENTRY: u64 = 0x9000000000d8c000;
+pub const ROOT_ZONE_ENTRY: u64 = 0x9000000000f35000;
 pub const ROOT_ZONE_CPUS: u64 = 1 << 0;
 
 pub const ROOT_ZONE_NAME: &str = "root-linux-la64";
@@ -166,7 +166,7 @@ pub const ROOT_PCI_CONFIG: [HvPciConfig; 1] = [HvPciConfig {
     mem32_size: 0x0,
     pci_mem32_base: 0x0,
     mem64_base: 0x60000000,
-    mem64_size: 0x30000000,
+    mem64_size: 0x20000000, // must match DTS ranges and stage-2 IO region (0x60000000-0x7FFFFFFF)
     pci_mem64_base: 0x60000000,
     bus_range_begin: 0,
     bus_range_end: 0xff,
@@ -206,10 +206,17 @@ pub const ROOT_PCI_DEVS: &[HvPciDevConfig] = &[
     pci_dev!(0x0, 0x0, 0x13, 0x0, VpciDevType::Physical), // 00:13.0
     pci_dev!(0x0, 0x0, 0x16, 0x0, VpciDevType::Physical), // 00:16.0
     pci_dev!(0x0, 0x0, 0x19, 0x0, VpciDevType::Physical), // 00:19.0
+    // Official TIMECREATE 3A BOARD BUS
     pci_dev!(0x0, 0x2, 0x0, 0x0, VpciDevType::Physical), // 02:00.0
     pci_dev!(0x0, 0x5, 0x0, 0x0, VpciDevType::Physical), // 05:00.0
     pci_dev!(0x0, 0x6, 0x0, 0x0, VpciDevType::Physical), // 06:00.0
-    pci_dev!(0x0, 0x8, 0x0, 0x0, VpciDevType::Physical), // 0a:00.0 (SZ M.2 SSD bus)
+    // SZ BOARD BUS
+    pci_dev!(0x0, 0x8, 0x0, 0x0, VpciDevType::Physical), // 08:00.0
+    pci_dev!(0x0, 0x8, 0x0, 0x1, VpciDevType::Physical), // 08:00.1
+    pci_dev!(0x0, 0x8, 0x0, 0x2, VpciDevType::Physical), // 08:00.2
+    pci_dev!(0x0, 0x8, 0x0, 0x3, VpciDevType::Physical), // 08:00.3
+    pci_dev!(0x0, 0x0, 0x14, 0x0, VpciDevType::Physical), // 00:14.0 (pci bridge)
+    pci_dev!(0x0, 0xa, 0x0, 0x0, VpciDevType::Physical), // 0a:00.0 (M.2 SSD)
 ];
 
 // bus << 8 | dev << 5 | func << 3
