@@ -1,6 +1,6 @@
 ENTRY(arch_entry)
-BASE_ADDRESS = 0x9000000380000000; /* PA 14 GB, fits in 16GB machine */
-CPU_NUM = 8;
+BASE_ADDRESS = 0x9000000200000000; /* PA 8 GB, far above Linux load area; needs QEMU -m >=10G */
+CPU_NUM = 4;
 
 
 SECTIONS

@@ -145,7 +145,7 @@ pub const ROOT_ZONE_MEMORY_REGIONS: &[HvConfigMemoryRegion] = &[
         mem_type: MEM_TYPE_RAM,
         physical_start: 0x100000000,
         virtual_start:  0x100000000,
-        size: 0x780000000,
+        size: 0x300000000,  // 12 GB high RAM (16 GB total - 4 GB low)
     }, // RAM
 
     HvConfigMemoryRegion {

@@ -41,22 +41,20 @@ pub fn primary_init_early() {
         return;
     }
     info!("loongarch64: irqchip: primary_init_early: checking iochip configs");
-    print_chip_info();
-    csr_disable_new_codec();
-    // legacy_int_enable_all();
-    // extioi_mode_disable();
-    info!("loongarch64: irqchip: testing percore IPI feature");
-    let is_ipi_percore = get_ipi_percore();
-    info!(
-        "loongarch64: irqchip: percore IPI feature: {}",
-        is_ipi_percore
-    );
+    // QEMU-virt workaround: skip all 7A2000 chip-config probes (they read CHIP_CONFIG
+    // regs via PA, which QEMU iocsr_misc doesnt return sensible values for and seems
+    // to deadlock the boot). TODO: add loongson_7a1000 cfg gate to make this clean.
+    info!("loongarch64: irqchip: SKIPPING all 7A2000 chip probes (QEMU virt workaround)");
+    // print_chip_info();
+    // csr_disable_new_codec();
+    // let is_ipi_percore = get_ipi_percore();
+    // info!("percore IPI: {}", is_ipi_percore);
 }
 pub fn primary_init_late() {
     info!("loongarch64: irqchip: primary_init_late: running primary_init_late");
 
-    info!("loongarch64: irqchip: primary_init_late: testing UART1");
-    crate::device::uart::loongson_uart::__test_uart1();
+    info!("loongarch64: irqchip: primary_init_late: SKIPPING UART1 test (not on QEMU)");
+    // crate::device::uart::loongson_uart::__test_uart1();
 
     // info!("loongarch64: irqchip: primary_init_late: probing pci");
     // probe_pci();

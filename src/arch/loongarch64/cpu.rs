@@ -395,6 +395,14 @@ impl ArchCpu {
             self.ctx.x[5] = 0;
             self.ctx.x[6] = 0;
             info!("a0={:#x?} a1={:#x?} a2={:#x?}", self.ctx.x[4], self.ctx.x[5], self.ctx.x[6]);
+            // FIX: BootContext on this UEFI captures DMW0..3 = 0 (TLB-only UEFI).
+            // Without overriding, guest GCSR.DMW = 0 + invtlb wipes TLB -> infinite refill.
+            // Use current pCPU DMW (hvisor arch_entry set 0x8/0x9 segments).
+            snap.dmw0 = read_csr_dmw0();
+            snap.dmw1 = read_csr_dmw1();
+            snap.dmw2 = read_csr_dmw2();
+            snap.dmw3 = read_csr_dmw3();
+            info!("root zone DMW override: dmw0={:#x} dmw1={:#x}", snap.dmw0, snap.dmw1);
         } else {
             let is_acpi = {
                 let zone = this_zone();
@@ -447,6 +455,20 @@ impl ArchCpu {
         self.ctx.x[19] = boot_ctx.t7;
         self.ctx.x[20] = boot_ctx.t8;
 
+        // QEMU/PR-fix: ertn loads guest PC from CSR.GERA. snap.era was set from
+        // boot_ctx.era (loongstub saved host CSR.ERA at capture time, NOT the
+        // actual kernel entry). Override with cpu_on_entry which is the real
+        // EFI StartImage / kernel entry. Without this, guest faults at random
+        // EFI runtime PC immediately after ertn. (Originally diagnosed via QEMU
+        // gdb + trap log on 2026-05-19.)
+        snap.era = this_cpu_data().cpu_on_entry;
+        info!("OVERRIDE snap.era = cpu_on_entry = {:#x}", snap.era);
+        // QEMU debug: dump what _hyp_trap_return will load.
+        info!("PRE-ERTN: ctx.sepc = {:#x} (will go to CSR.ERA)", self.ctx.sepc);
+        info!("PRE-ERTN: ctx.x[1..7] = {:#x} {:#x} {:#x} {:#x} {:#x} {:#x}",
+              self.ctx.x[1], self.ctx.x[2], self.ctx.x[3], self.ctx.x[4], self.ctx.x[5], self.ctx.x[6]);
+        info!("PRE-ERTN: cpu_on_entry = {:#x}, start_image = {:#x}",
+              this_cpu_data().cpu_on_entry, boot_ctx.start_image);
         snap.write_all();
         self.vcpu_enter();
     }
@@ -467,7 +489,21 @@ impl ArchCpu {
         let boot_ctx = unsafe { &mut *(CPU_BOOT_CONTEXT_ADDRESS as *mut BootContext) };
         info!("boot_ctx_addr={:#x}", CPU_BOOT_CONTEXT_ADDRESS);
 
-        let snap = GcsrSnapshot::from_secondary(boot_ctx, vcpu_id);
+        let mut snap = GcsrSnapshot::from_secondary(boot_ctx, vcpu_id);
+        // QEMU/PR-fix: ertn loads guest PC from CSR.GERA. snap.era was set from
+        // boot_ctx.era (loongstub saved host CSR.ERA at capture time, NOT the
+        // actual kernel entry). Override with cpu_on_entry which is the real
+        // EFI StartImage / kernel entry. Without this, guest faults at random
+        // EFI runtime PC immediately after ertn. (Originally diagnosed via QEMU
+        // gdb + trap log on 2026-05-19.)
+        snap.era = this_cpu_data().cpu_on_entry;
+        info!("OVERRIDE snap.era = cpu_on_entry = {:#x}", snap.era);
+        // QEMU debug: dump what _hyp_trap_return will load.
+        info!("PRE-ERTN: ctx.sepc = {:#x} (will go to CSR.ERA)", self.ctx.sepc);
+        info!("PRE-ERTN: ctx.x[1..7] = {:#x} {:#x} {:#x} {:#x} {:#x} {:#x}",
+              self.ctx.x[1], self.ctx.x[2], self.ctx.x[3], self.ctx.x[4], self.ctx.x[5], self.ctx.x[6]);
+        info!("PRE-ERTN: cpu_on_entry = {:#x}, start_image = {:#x}",
+              this_cpu_data().cpu_on_entry, boot_ctx.start_image);
         snap.write_all();
         self.vcpu_enter();
     }
